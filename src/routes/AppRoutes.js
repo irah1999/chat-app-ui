@@ -14,6 +14,8 @@ const ContactPage = React.lazy(() => import('../pages/contact/Contact'));
 
 const ChatPage = React.lazy(() => import('../pages/chat/Chat'));
 
+const GroupchatPage = React.lazy(() => import('../pages/group-chat/groupChat'));
+
 
 const AppRoutes = () => {
   return (
@@ -26,6 +28,7 @@ const AppRoutes = () => {
           {/* <Route path="/home" element={<PrivateRoute element={<HomePage />} />} /> */}
           <Route path="/contact" element={<PrivateRoute element={<ContactPage />} />} />
           <Route path="/chat" element={<PrivateRoute element={<ChatPage />} />} />
+          <Route path="/group-chat" element={<PrivateRoute element={<GroupchatPage />} />} />
         </Routes>
     </Suspense>
   );

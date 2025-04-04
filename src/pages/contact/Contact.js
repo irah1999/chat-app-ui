@@ -4,12 +4,16 @@ import { useSelector } from 'react-redux';
 import { axios } from '../../lib/axios';
 import Styles from '../chat/chat.module.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faTimes  } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { chatUser } from '../../redux/slices/chatSlice';
+import ThreeDotMenu from '../../components/ThreeDotMenu/ThreeDotMenu';
+import MultiSelectDropdown from '../../components/MultiSelectDropdown/MultiSelectDropdown';
+import LoaderButton from '../../components/Loader/LoaderButton';
+import Toast from "../../components/Toast/toast";
 
-const Contact = () => { 
+const Contact = () => {
     const echo = useEcho();
     const user = useSelector((state) => state.auth.user);
     const chatContainerRef = useRef(null);
@@ -20,6 +24,13 @@ const Contact = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1); // Track current page
     const [hasMore, setHasMore] = useState(true); // Check if there are more messages to load
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [addUser, setAddusers] = useState([]);
+    const [formData, setFormData] = useState({ name: "", user: addUser });
+
+    const [loadingBtn, setLoadingBtn] = useState(false);
 
     // useRef to track if effect has already run
     const hasFetched = useRef(false);
@@ -103,15 +114,57 @@ const Contact = () => {
         dispatch(chatUser(member));
         navigate(`/chat`);
     }
+
+    // Open Modal
+    const openModal = () => setIsModalOpen(true);
+
+    // Close Modal
+    const closeModal = () => setIsModalOpen(false);
+
+    // Handle Form Input Change
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({ ...prevData, [name]: value }));
+    };
+
+    // Handle Form Submission
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        formData.user = addUser;
+        setLoadingBtn(true);
+        try {
+            axios.post("create-group", formData)
+            .then(res => {
+                console.log("res => ",res);
+                if (res.data.success) {
+                    Toast.showSuccess(res.data.message);
+                    closeModal(); // Close modal after submission
+                } else {
+                    Toast.showError(res.data.message);
+                }
+            })
+            .catch(error => {
+                console.log("Error =>", error.response ? error.response.data : error.message);
+            }).
+            finally (() => {
+                setLoadingBtn(false);
+            });
+        } catch (err) {
+            console.log("Error fetching messages:", err);
+        }
+    };
+
+    const handleAddUser = (user) => {
+        console.log("user => ", user)
+        setAddusers(user);
+    }
+
+
     return (
         <div className={`container h-screen bg-gray-100 lg:w-1/2 shadow-md ${Styles.chatMargin} mx-auto flex flex-col`}>
             {/* Header */}
             <header className="bg-white text-black shadow-md">
                 <div className="container mx-auto flex items-center justify-between py-4 px-6">
-                    <div>
-                        <h3 className='text-blue-950 font-medium'>Contact List</h3>
-                    </div>
-
                     <div className="flex items-center space-x-2">
                         <img
                             src="/images/avatar.svg"
@@ -123,6 +176,11 @@ const Contact = () => {
                             <p className="text-xs text-gray-400">{user?.email}</p>
                         </div>
                     </div>
+                    <div className="flex items-center justify-between">
+                        {/* <h3 className='text-blue-950 font-medium'>Contact List</h3> */}
+                        <ThreeDotMenu openModal={openModal} />
+                    </div>
+
                 </div>
             </header>
 
@@ -137,7 +195,7 @@ const Contact = () => {
                 {contacts.map((member, index) => (
                     <div
                         key={index}
-                        className="flex items-center justify-between p-3 border-b hover:bg-white cursor-pointer transition" 
+                        className="flex items-center justify-between p-3 border-b hover:bg-white cursor-pointer transition"
                         onClick={() => handleClick(member)}
                     >
                         <div className="flex items-center space-x-3">
@@ -162,6 +220,57 @@ const Contact = () => {
 
                 {loading && page > 1 ? <p>Loading more messages...</p> : null}
             </div>
+            {isModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold text-blue-950">+ Create Group</h2>
+                            <FontAwesomeIcon icon={faTimes} className="cursor-pointer" onClick={closeModal} />
+                        </div>
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-4">
+                                <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Group Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-950"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Add Users
+                                </label>
+                                <MultiSelectDropdown handleAddUser={handleAddUser} required />
+                            </div>
+                            <div className="flex items-center justify-end space-x-2">
+                                {/* <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                                >
+                                    Close
+                                </button> */}
+                                {/* <button
+                                    type="submit"
+                                    className="px-4 py-2 text-white bg-blue-950 rounded hover:bg-blue-900"
+                                >
+                                    Submit
+                                </button> */}
+                                <LoaderButton 
+                                        isLoading={loadingBtn} 
+                                        text="Create" 
+                                        loadingText="Processing..."
+                                />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

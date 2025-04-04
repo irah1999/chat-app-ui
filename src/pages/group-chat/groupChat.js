@@ -5,8 +5,8 @@ import { axios } from '../../lib/axios';
 import Styles from '../chat/chat.module.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
-const Chat = () => {
-    const echo = useEcho();
+const Groupchat = () => {
+    const echo = useEcho({ channelType: 'presence', channelName: 1 });
     const user = useSelector((state) => state.auth.user);
     const recieverUser = useSelector((state) => state.chat.recieverUser);
     const chatContainerRef = useRef(null);
@@ -48,7 +48,7 @@ const Chat = () => {
         hasFetched.current = true;  // Mark effect as run
 
         // Fetch messages when page changes
-        fetchMessages(page);
+        // fetchMessages(page);
 
     }, [page]);  // Dependency array contains `page`
 
@@ -66,17 +66,16 @@ const Chat = () => {
     // Handle real-time message updates via Echo
     useEffect(() => {
         if (!echo || !user?.id) return;
-
-        const channel = echo.private(`chat.${user.id}`);
-
-        channel.listen("MessageSent", (event) => {
-            if (parseInt(event.receiver.id) === parseInt(user.id)) {
-                setMessages((prev) => [...prev, { text: event.message, type: "received" }]);
-            }
+    
+        const channel = echo.join(`group.1`);
+        
+        channel.listen("GroupMessageSent", (event) => {
+            console.log("event => ", event);
         });
-
+    
         return () => {
-            channel.stopListening("MessageSent");
+            channel.stopListening(".GroupMessageSent");
+            channel.leave();
         };
     }, [echo, user]);
 
@@ -126,7 +125,7 @@ const Chat = () => {
         if (container) {
             container.scrollTop = container.scrollHeight; // Scroll to the bottom
         }
-        updateUnRead();
+        // updateUnRead();
     }, [messages]);
 
     return (
@@ -187,4 +186,4 @@ const Chat = () => {
     );
 };
 
-export default Chat;
+export default Groupchat;
