@@ -156,7 +156,8 @@ const Contact = () => {
                     Toast.showSuccess(res.data.message);
                     setIsModalOpen(false);
                     setPage(1);
-                    setContacts([]);
+                    // setContacts([]);
+                    fetchContact();
                     setHasMore(true);
                 } else {
                     Toast.showError(res.data.message);

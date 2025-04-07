@@ -59,7 +59,7 @@ const Groupchat = () => {
         try {
             const response = await axios.post("group/get-messages", {
                 group_id: groupid,
-                limit: 10,
+                limit: 20,
                 page: customPage,
             });
 

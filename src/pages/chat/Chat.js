@@ -40,7 +40,7 @@ const Chat = () => {
         try {
             const response = await axios.post("get-messages", {
                 user_id: recieverUser.user_id,
-                limit: 10,
+                limit: 20,
                 page: customPage,
             });
 
